@@ -19,7 +19,7 @@ function App() {
 
       <input type="file" accept="application/pdf" onChange={handleFile} /><br />
 
-      {fileData && <PDFViewer pdfData={fileData} />}
+      {fileData && <PDFViewer file={fileData} />}
     </div>
   );
 }

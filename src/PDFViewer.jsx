@@ -5,92 +5,138 @@ pdfjsLib.GlobalWorkerOptions.workerPort = new pdfWorker();
 
 import "./App.css";
 
-export default function PdfViewer({ pdfData }) {
-  const canvasRef = useRef(null);
+export default function PDFViewer({ file }) {
   const containerRef = useRef(null);
-
-  const [pdfDoc, setPdfDoc] = useState(null);
-  const [pageNum] = useState(1);
-  const [topY, setTopY] = useState(50);
-  const [bottomY, setBottomY] = useState(300);
-  const [dragging, setDragging] = useState(null);
+    
+  const [pageData, setPageData] = useState([]);  
+  // Each entry: { top: number, bottom: number, canvasRef }
 
   useEffect(() => {
-    (async () => {
-      const loadingTask = pdfjsLib.getDocument({ data: pdfData });
-      const pdf = await loadingTask.promise;
-      setPdfDoc(pdf);
-    })();
-  }, [pdfData]);
+    if (!file) return;
 
-  useEffect(() => {
-    if (!pdfDoc) return;
+    const loadPdf = async () => {
+      const pdf = await pdfjsLib.getDocument(file).promise;
 
-    (async () => {
-      const page = await pdfDoc.getPage(pageNum);
+      const pages = [];
 
-      const viewport = page.getViewport({ scale: 1.5 });
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
 
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
 
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
 
-      // Adjust bottom line if out of bounds
-      if (bottomY > viewport.height) setBottomY(viewport.height - 50);
+        await page.render({ canvasContext: context, viewport }).promise;
 
-      await page.render({ canvasContext: ctx, viewport }).promise;
-    })();
-  }, [pdfDoc]);
+        // Default crop lines 50px from top and bottom  
+        pages.push({
+          pageNum,
+          canvas,
+          width: canvas.width,
+          height: canvas.height,
+          top: 50,
+          bottom: canvas.height - 50
+        });
+      }
 
-  // Drag handlers
-  const handleMouseDown = (line) => (e) => {
-    setDragging({ line, offsetY: e.clientY });
+      setPageData(pages);
+    };
+
+    loadPdf();
+  }, [file]);
+
+  // Dragging logic for crop lines  
+  const handleDrag = (pageIndex, which, event) => {
+    const rect = event.target.parentElement.getBoundingClientRect();
+    const y = event.clientY - rect.top;
+
+    setPageData(prev => {
+      const updated = [...prev];
+      const page = { ...updated[pageIndex] };
+
+      if (which === "top") {
+        page.top = Math.max(0, Math.min(y, page.bottom - 20));
+      } else {
+        page.bottom = Math.min(page.height, Math.max(y, page.top + 20));
+      }
+
+      updated[pageIndex] = page;
+      return updated;
+    });
   };
 
-  const handleMouseMove = (e) => {
-    if (!dragging) return;
-
-    const container = containerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-
-    const canvasHeight = canvasRef.current.height;
-
-    // Clamp
-    const clampedY = Math.max(0, Math.min(y, canvasHeight));
-
-    if (dragging.line === "top") setTopY(clampedY);
-    if (dragging.line === "bottom") setBottomY(clampedY);
-  };
-
-  const handleMouseUp = () => setDragging(null);
+  if (!file) {
+    return <p>Upload a PDF to begin.</p>;
+  }
 
   return (
-    <div
-      className="viewer-container"
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-    >
-      {/* PDF page */}
-      <canvas ref={canvasRef} className="pdf-canvas"></canvas>
+    <div>
+      <h2>PDF Preview</h2>
 
-      {/* Crop lines */}
-      <div
-        className="crop-line"
-        style={{ top: topY }}
-        onMouseDown={handleMouseDown("top")}
-      ></div>
+      <div ref={containerRef}>
+        {pageData.map((p, i) => (
+          <div key={i} style={{ position: "relative", marginBottom: "40px" }}>
+            {/* Canvas */}
+            <canvas
+              ref={(ref) => {
+                if (ref && ref !== p.canvas) {
+                  ref.width = p.canvas.width;
+                  ref.height = p.canvas.height;
+                  const ctx = ref.getContext("2d");
+                  ctx.drawImage(p.canvas, 0, 0);
+                }
+              }}
+            />
 
-      <div
-        className="crop-line"
-        style={{ top: bottomY }}
-        onMouseDown={handleMouseDown("bottom")}
-      ></div>
+            {/* Top crop line */}
+            <div
+              style={{
+                position: "absolute",
+                top: p.top,
+                left: 0,
+                width: "100%",
+                height: "2px",
+                background: "red",
+                cursor: "ns-resize"
+              }}
+              onMouseDown={(e) => {
+                const move = (ev) => handleDrag(i, "top", ev);
+                const up = () => {
+                  window.removeEventListener("mousemove", move);
+                  window.removeEventListener("mouseup", up);
+                };
+                window.addEventListener("mousemove", move);
+                window.addEventListener("mouseup", up);
+              }}
+            />
+
+            {/* Bottom crop line */}
+            <div
+              style={{
+                position: "absolute",
+                top: p.bottom,
+                left: 0,
+                width: "100%",
+                height: "2px",
+                background: "blue",
+                cursor: "ns-resize"
+              }}
+              onMouseDown={(e) => {
+                const move = (ev) => handleDrag(i, "bottom", ev);
+                const up = () => {
+                  window.removeEventListener("mousemove", move);
+                  window.removeEventListener("mouseup", up);
+                };
+                window.addEventListener("mousemove", move);
+                window.addEventListener("mouseup", up);
+              }}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
