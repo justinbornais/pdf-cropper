@@ -1,6 +1,5 @@
-.app {
-  padding: 20px;
-  font-family: Arial, sans-serif;
+body {
+  font-family: sans-serif;
 }
 
 .viewer-container {
@@ -9,8 +8,9 @@
   margin-top: 20px;
 }
 
-.pdf-canvas {
-  border: 1px solid #ccc;
+canvas {
+  display: block;
+  margin: 0;
 }
 
 .crop-line {
