@@ -77,7 +77,7 @@ export async function generateFinalPDF({ pages, boxes, scale }) {
     drawH = Math.max(1, Math.round(drawH));
     
     const padX = (PAGE_WIDTH - drawW) / 2;
-    const padY = (PAGE_HEIGHT - drawH) / 2;
+    const padY = drawH < PAGE_HEIGHT ? 0 : (PAGE_HEIGHT - drawH) / 2;
 
     if (i > 0) pdf.addPage();
     pdf.addImage(imgData, "JPEG", padX, padY, drawW, drawH);
