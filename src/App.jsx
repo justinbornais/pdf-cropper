@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PDFViewer from "./PDFViewer";
 import * as pdfjsLib from "pdfjs-dist";
+import { generateFinalPDF } from "./pdf-export";
 import "pdfjs-dist/build/pdf.worker.min.mjs";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -13,6 +14,7 @@ import "./App.css";
 export default function App() {
   const [pages, setPages] = useState([]);
   const [boxes, setBoxes] = useState([]);
+  const [scale, setScale] = useState(1);
 
   const loadPDF = async (file) => {
     const arrayBuf = await file.arrayBuffer();
@@ -27,12 +29,16 @@ export default function App() {
   };
 
   const addBox = () => {
+    const newTop = boxes.length > 0
+      ? boxes[boxes.length - 1].top + boxes[boxes.length - 1].height
+      : 0;
+    
     setBoxes((boxes) => [
       ...boxes,
       {
         id: crypto.randomUUID(),
-        top: 0,
-        height: 200
+        top: newTop,
+        height: pages[0]?.getViewport().height || 500
       }
     ]);
   };
@@ -61,11 +67,14 @@ export default function App() {
         <div style={{ marginTop: 20 }}>
           <button onClick={addBox}>Add Box</button>
           <button onClick={removeLastBox}>Remove Last Box</button>
+          <button onClick={() => generateFinalPDF({ pages, boxes, scale })}>Generate PDF</button>
 
           <PDFViewer
             pages={pages}
             boxes={boxes}
             updateBox={updateBox}
+            scale={scale}
+            setScale={setScale}
           />
         </div>
       )}

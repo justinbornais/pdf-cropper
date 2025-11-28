@@ -1,66 +1,57 @@
 import { useEffect, useRef, useState } from "react";
 import CropBox from "./CropBox";
+import PDFPage from "./PDFPage";
 
-export default function PDFViewer({ pages, boxes, updateBox }) {
+export default function PDFViewer({ pages, boxes, updateBox, scale, setScale }) {
   const containerRef = useRef();
   const [pageInfo, setPageInfo] = useState([]);
 
+  // Compute initial scale.
   useEffect(() => {
-    const load = async () => {
-      const info = [];
-      let cumulativeTop = 0;
+    if (pages.length === 0) return;
 
-      for (const page of pages) {
-        const viewport = page.getViewport({ scale: 1.5 });
+    const firstPage = pages[0];
+    const unscaled = firstPage.getViewport({ scale: 1 });
+    const containerWidth = containerRef.current.clientWidth;
 
-        info.push({
-          page,
-          viewport,
-          top: cumulativeTop,
-          height: viewport.height
-        });
+    setScale(containerWidth / unscaled.width);
+  }, [pages.length]);
 
-        cumulativeTop += viewport.height;
-      }
-      setPageInfo(info);
-    };
+  const registerPage = (index) => (top, height) => {
+    setPageInfo((prev) => {
+      const copy = [...prev];
+      copy[index] = { top, height };
+      return copy;
+    });
+  };
 
-    load();
-  }, [pages]);
+  const totalHeight =
+    pageInfo.length > 0
+      ? pageInfo.reduce(
+          (acc, p) => Math.max(acc, p.top + p.height),
+          0
+        )
+      : 0;
 
   return (
     <div
       ref={containerRef}
       style={{
         position: "relative",
-        width: "80vw",
+        width: "50%",
         border: "1px solid #ccc",
         overflowY: "scroll",
         height: "90vh",
         margin: "2rem auto"
       }}
     >
-      {/* Render pages */}
-      {pageInfo.map((p, idx) => (
-        <canvas
-          key={idx}
-          ref={async (canvas) => {
-            if (!canvas) return;
-            const ctx = canvas.getContext("2d");
-
-            canvas.width = p.viewport.width;
-            canvas.height = p.viewport.height;
-
-            await p.page.render({
-              canvasContext: ctx,
-              viewport: p.viewport
-            }).promise;
-          }}
-          style={{
-            position: "absolute",
-            top: p.top,
-            left: 0
-          }}
+      {pages.map((page, i) => (
+        <PDFPage 
+          key={i}
+          index={i}
+          page={page}
+          scale={scale}
+          onMeasure={registerPage(i)}
         />
       ))}
 
@@ -70,12 +61,7 @@ export default function PDFViewer({ pages, boxes, updateBox }) {
           key={box.id}
           box={box}
           updateBox={updateBox}
-          containerHeight={
-            pageInfo.length > 0
-              ? pageInfo[pageInfo.length - 1].top +
-                pageInfo[pageInfo.length - 1].height
-              : 0
-          }
+          containerHeight={totalHeight}
         />
       ))}
     </div>

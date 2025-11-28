@@ -1,104 +1,113 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function CropBox({ box, updateBox, containerHeight }) {
-  const boxRef = useRef(null);
-  const [dragging, setDragging] = useState(false);
-  const [resizingTop, setResizingTop] = useState(false);
-  const [resizingBottom, setResizingBottom] = useState(false);
+  const dragging = useRef(false);
+  const resizingTop = useRef(false);
+  const resizingBottom = useRef(false);
+
   const startY = useRef(0);
   const startTop = useRef(0);
   const startHeight = useRef(0);
 
   const onMouseDown = (e) => {
-    if (e.target.dataset.resize === "top") {
-      setResizingTop(true);
-    } else if (e.target.dataset.resize === "bottom") {
-      setResizingBottom(true);
-    } else {
-      setDragging(true);
-    }
     startY.current = e.clientY;
     startTop.current = box.top;
     startHeight.current = box.height;
-  };
 
-  const onMouseMove = (e) => {
-    if (!dragging && !resizingTop && !resizingBottom) return;
-
-    const dy = e.clientY - startY.current;
-
-    if (dragging) {
-      updateBox(box.id, {
-        top: Math.max(0, Math.min(containerHeight - box.height, startTop.current + dy))
-      });
+    if (e.target.dataset.resize === "top") {
+      resizingTop.current = true;
+    } else if (e.target.dataset.resize === "bottom") {
+      resizingBottom.current = true;
+    } else {
+      dragging.current = true;
     }
 
-    if (resizingTop) {
-      let newTop = startTop.current + dy;
-      let newHeight = startHeight.current - dy;
+    e.stopPropagation();
+    e.preventDefault();
+  };
 
-      if (newHeight >= 30 && newTop >= 0) {
-        updateBox(box.id, { top: newTop, height: newHeight });
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      const dy = e.clientY - startY.current;
+
+      if (dragging.current) {
+        updateBox(box.id, {
+          top: Math.max(
+            0,
+            Math.min(containerHeight - box.height, startTop.current + dy)
+          )
+        });
       }
-    }
 
-    if (resizingBottom) {
-      let newHeight = startHeight.current + dy;
+      if (resizingTop.current) {
+        const newTop = startTop.current + dy;
+        const newHeight = startHeight.current - dy;
 
-      if (newHeight >= 30 && box.top + newHeight <= containerHeight) {
-        updateBox(box.id, { height: newHeight });
+        if (newHeight > 40 && newTop >= 0) {
+          updateBox(box.id, { top: newTop, height: newHeight });
+        }
       }
-    }
-  };
 
-  const onMouseUp = () => {
-    setDragging(false);
-    setResizingTop(false);
-    setResizingBottom(false);
-  };
+      if (resizingBottom.current) {
+        const newHeight = startHeight.current + dy;
+        if (newHeight > 40 && box.top + newHeight <= containerHeight) {
+          updateBox(box.id, { height: newHeight });
+        }
+      }
+    };
+
+    const onMouseUp = () => {
+      dragging.current = false;
+      resizingTop.current = false;
+      resizingBottom.current = false;
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [box, updateBox, containerHeight]);
 
   return (
     <div
-      ref={boxRef}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
       style={{
         position: "absolute",
         left: 0,
         top: box.top,
         width: "100%",
         height: box.height,
-        border: "2px solid red",
-        backgroundColor: "rgba(255,0,0,0.1)",
-        cursor: dragging ? "grabbing" : "grab"
+        background: "rgba(255,0,0,0.15)",
+        border: "2px solid red"
       }}
+      onMouseDown={onMouseDown}
     >
-      {/* Top resize handle */}
+      {/* Resize Top */}
       <div
         data-resize="top"
         style={{
           position: "absolute",
-          top: -4,
+          top: -5,
           left: 0,
+          height: 10,
           width: "100%",
-          height: 8,
-          background: "rgba(0,0,0,0.2)",
-          cursor: "ns-resize"
+          cursor: "ns-resize",
+          background: "transparent"
         }}
       />
-
-      {/* Bottom resize handle */}
+      {/* Resize Bottom */}
       <div
         data-resize="bottom"
         style={{
           position: "absolute",
-          bottom: -4,
+          bottom: -5,
           left: 0,
+          height: 10,
           width: "100%",
-          height: 8,
-          background: "rgba(0,0,0,0.2)",
-          cursor: "ns-resize"
+          cursor: "ns-resize",
+          background: "transparent"
         }}
       />
     </div>
