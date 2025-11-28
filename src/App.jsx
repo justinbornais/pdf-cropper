@@ -65,9 +65,9 @@ export default function App() {
 
       {pages.length > 0 && (
         <div style={{ marginTop: 20 }}>
-          <button onClick={addBox}>Add Box</button>
-          <button onClick={removeLastBox}>Remove Last Box</button>
-          <button onClick={() => generateFinalPDF({ pages, boxes, scale })}>Generate PDF</button>
+          <button className="ms-3 btn btn-primary" onClick={addBox}>Add Box</button>
+          <button className="ms-3 btn btn-danger" onClick={removeLastBox}>Remove Last Box</button>
+          <button className="ms-3 btn btn-success" onClick={() => generateFinalPDF({ pages, boxes, scale })}>Generate PDF</button>
 
           <PDFViewer
             pages={pages}
