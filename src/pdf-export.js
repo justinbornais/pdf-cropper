@@ -54,7 +54,7 @@ export async function generateFinalPDF({ pages, boxes, scale }) {
       0, 0, cropWidthPx, cropHeightPx
     );
 
-    const imgData = cropCanvas.toDataURL("image/png", 0.95);
+    const imgData = cropCanvas.toDataURL("image/jpeg", 0.95);
 
     // 4. Fit into the PDF page with padding.
     const contentW = cropCanvas.width;
