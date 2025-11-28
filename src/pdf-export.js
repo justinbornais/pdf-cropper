@@ -38,9 +38,9 @@ export async function generateFinalPDF({ pages, boxes, scale }) {
     }
 
     // 2. Convert crop box coords into unscaled PDF pixel coords.
-    const cropTopPx = top / scale;
-    const cropHeightPx = height / scale;
-    const cropWidthPx = viewport.width;
+    const cropTopPx = (top / scale) * pixelScale;
+    const cropHeightPx = (height / scale) * pixelScale;
+    const cropWidthPx = fullCanvas.width;
 
     // 3. Crop the image data.
     const cropCanvas = document.createElement("canvas");
@@ -73,6 +73,9 @@ export async function generateFinalPDF({ pages, boxes, scale }) {
       drawW = PAGE_HEIGHT * aspect;
     }
 
+    drawW = Math.max(1, Math.round(drawW));
+    drawH = Math.max(1, Math.round(drawH));
+    
     const padX = (PAGE_WIDTH - drawW) / 2;
     const padY = (PAGE_HEIGHT - drawH) / 2;
 
