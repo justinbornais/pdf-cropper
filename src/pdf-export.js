@@ -3,10 +3,11 @@ import jsPDF from "jspdf";
 // LETTER (change to A4 if you want)
 const PAGE_WIDTH = 612;  // 8.5 inch × 72dpi
 const PAGE_HEIGHT = 792; // 11 inch × 72dpi
+const TARGET_DPI = 200;
 
-export async function generateFinalPDF({ pages, boxes, scale }) {
+export async function generateFinalPDF({ pages, boxes, scale, greyscale = false }) {
 
-  const pixelScale = 3; // Larger value = higher resolution.
+  const pixelScale = TARGET_DPI / 72; // Larger value = higher resolution.
 
   const pdf = new jsPDF({
     unit: "pt",
@@ -54,7 +55,11 @@ export async function generateFinalPDF({ pages, boxes, scale }) {
       0, 0, cropWidthPx, cropHeightPx
     );
 
-    const imgData = cropCanvas.toDataURL("image/jpeg", 0.95);
+    if (greyscale) {
+      applyGrayscale(cropCtx, cropCanvas.width, cropCanvas.height);
+    }
+
+    const imgData = cropCanvas.toDataURL("image/jpeg", 0.9);
 
     // 4. Fit into the PDF page with padding.
     const contentW = cropCanvas.width;
@@ -84,4 +89,21 @@ export async function generateFinalPDF({ pages, boxes, scale }) {
   }
 
   pdf.save("cropped_output.pdf");
+}
+
+// Helper function to apply greyscale filtering to image data.
+function applyGrayscale(ctx, width, height) {
+  const img = ctx.getImageData(0, 0, width, height);
+  const data = img.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const gray =
+      0.299 * data[i] +
+      0.587 * data[i + 1] +
+      0.114 * data[i + 2];
+
+    data[i] = data[i + 1] = data[i + 2] = gray;
+  }
+
+  ctx.putImageData(img, 0, 0);
 }

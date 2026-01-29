@@ -15,6 +15,7 @@ export default function App() {
   const [pages, setPages] = useState([]);
   const [boxes, setBoxes] = useState([]);
   const [scale, setScale] = useState(1);
+  const [greyscale, setGreyscale] = useState();
 
   const loadPDF = async (file) => {
     const arrayBuf = await file.arrayBuffer();
@@ -67,7 +68,10 @@ export default function App() {
         <div style={{ marginTop: 20 }}>
           <button className="ms-3 btn btn-primary" onClick={addBox}>Add Box</button>
           <button className="ms-3 btn btn-danger" onClick={removeLastBox}>Remove Last Box</button>
-          <button className="ms-3 btn btn-success" onClick={() => generateFinalPDF({ pages, boxes, scale })}>Generate PDF</button>
+          <button className="ms-3 btn btn-secondary" onClick={() => setGreyscale(g => !g)}>
+            {greyscale ? 'Greyscale: ON' : 'Greyscale: OFF'}
+          </button>
+          <button className="ms-3 btn btn-success" onClick={() => generateFinalPDF({ pages, boxes, scale, greyscale })}>Generate PDF</button>
 
           <PDFViewer
             pages={pages}
