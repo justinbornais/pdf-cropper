@@ -1,4 +1,4 @@
-import { Document, Page } from "react-pdf"
+import { Document } from "react-pdf"
 import { useState } from "react"
 import PageWrapper from "./PageWrapper"
 

@@ -9,14 +9,26 @@ body {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+  align-items: start;
+  margin: 0 2rem;
 }
+
 
 .page-wrapper {
   position: relative;
+  display: inline-block;
   background: white;
-  padding: 4px;
+}
+
+.react-pdf__Page {
+  display: inline-block !important;
+}
+
+.react-pdf__Page canvas {
+  max-width: 100%;
+  height: auto !important;
 }
 
 .split-line {
@@ -26,11 +38,21 @@ body {
   height: 2px;
   background: red;
   pointer-events: none;
+  z-index: 10;
 }
 
 .scissors {
-  width: 100%;
-  margin-top: 4px;
+  position: absolute;
+  top: 8px;
+  right: -36px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 20px;
+}
+
+.scissors.active {
+  color: red;
 }
 
 .scissors.active {
