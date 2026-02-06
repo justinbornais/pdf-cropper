@@ -57,6 +57,21 @@ export default function App() {
     setLineHistory(prev => prev.slice(0, -1))
   }
 
+  const setAllScissors = (state) => {
+    const allPageNumbers = Object.keys(pageHeights).map(Number)
+    
+    setPages(prev => {
+      const updated = { ...prev }
+      allPageNumbers.forEach(pageNum => {
+        updated[pageNum] = {
+          ...(prev[pageNum] || { lines: [] }),
+          pageEndCut: state
+        }
+      })
+      return updated
+    })
+  }
+
   const handleSubmit = async () => {
     const splits = generateSplits(pages, pageHeights, renderedHeights)
     
@@ -98,9 +113,27 @@ export default function App() {
 
       {pdfId && (
         <>
-          <button className="undo-button" onClick={handleUndoLine}>
-            ↶ Undo Line
-          </button>
+          <div className="controls-sticky">
+            <button className="page-button undo-button" onClick={handleUndoLine}>
+              ↶ Undo Line
+            </button>
+            
+            <button className="page-button scissors-control off" onClick={() => setAllScissors('off')}>
+              ✂️ All Off
+            </button>
+            
+            <button className="page-button scissors-control on" onClick={() => setAllScissors('on')}>
+              ✂️ All On
+            </button>
+            
+            <button className="page-button scissors-control document-split" onClick={() => setAllScissors('document-split')}>
+              ✂️ All Split
+            </button>
+
+            <button className="page-button submit" onClick={handleSubmit}>
+              Submit Splits
+            </button>
+          </div>
           
           <PDFGrid
             pdfId={pdfId}
@@ -110,10 +143,6 @@ export default function App() {
             setRenderedHeights={setRenderedHeights}
             setLineHistory={setLineHistory}
           />
-
-          <button className="submit" onClick={handleSubmit}>
-            Submit Splits
-          </button>
         </>
       )}
     </div>
