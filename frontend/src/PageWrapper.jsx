@@ -16,7 +16,9 @@ export default function PageWrapper({
   }
 
   const overlayRef = useRef(null);
+  const wrapperRef = useRef(null);
   const [lastClick, setLastClick] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   const updatePage = (data) => {
     setPages(prev => ({
@@ -29,7 +31,34 @@ export default function PageWrapper({
     updatePage(pageData); //eslint-disable-next-line
   }, []);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      {
+        rootMargin: '400px',
+        threshold: 0.01
+      }
+    );
+
+    if (wrapperRef.current) {
+      observer.observe(wrapperRef.current);
+    }
+
+    return () => {
+      if (wrapperRef.current) {
+        observer.unobserve(wrapperRef.current);
+      }
+    };
+  }, []);
+
   const handleClick = (e) => {
+    if (!isVisible) return; // Prevent clicks on placeholder
+    
     const rect = overlayRef.current.getBoundingClientRect()
     const y = e.clientY - rect.top
     const now = Date.now()
@@ -84,27 +113,41 @@ export default function PageWrapper({
   }
 
   return (
-    <div className="page-wrapper" ref={overlayRef}>
+    <div className="page-wrapper" ref={wrapperRef}>
       <div className="page-overlay" ref={overlayRef} onClick={handleClick}>
-        <Page
-          pageNumber={pageNumber}
-          renderTextLayer={false}
-          renderAnnotationLayer={false}
-          onLoadSuccess={(page) => {
-            setPageHeights(prev => ({
-              ...prev,
-              [pageNumber]: page.height
-            }))
-            // Store rendered height from DOM
-            if (overlayRef.current) {
-              const renderedHeight = overlayRef.current.getBoundingClientRect().height
-              setRenderedHeights(prev => ({
+        {isVisible ? (
+          <Page
+            pageNumber={pageNumber}
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
+            onLoadSuccess={(page) => {
+              setPageHeights(prev => ({
                 ...prev,
-                [pageNumber]: renderedHeight
+                [pageNumber]: page.height
               }))
-            }
-          }}
-        />
+              if (overlayRef.current) {
+                const renderedHeight = overlayRef.current.getBoundingClientRect().height
+                setRenderedHeights(prev => ({
+                  ...prev,
+                  [pageNumber]: renderedHeight
+                }))
+              }
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '220px',
+            height: '300px',
+            background: '#e0e0e0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#999',
+            fontSize: '14px'
+          }}>
+            Page {pageNumber}
+          </div>
+        )}
 
         {pageData.lines.map(line => (
           <div
