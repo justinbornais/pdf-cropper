@@ -41,6 +41,11 @@ body {
   z-index: 10;
 }
 
+.split-line.document-split {
+  background: purple;
+  height: 3px;
+}
+
 .scissors {
   position: absolute;
   top: 8px;
@@ -49,14 +54,18 @@ body {
   background: none;
   border: none;
   font-size: 20px;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 .scissors.active {
   color: red;
+  background: #ffcccc;
 }
 
-.scissors.active {
-  background: #ffcccc;
+.scissors.document-split {
+  color: purple;
+  background: #e6ccff;
 }
 
 .undo-button {

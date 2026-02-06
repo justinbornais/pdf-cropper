@@ -72,18 +72,18 @@ export default function App() {
         return
       }
       
-      // Download the resulting PDF
+      // Download the resulting ZIP file
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'split_hymns.pdf'
+      a.download = 'split_hymns.zip'
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
       
-      alert("Split request submitted and PDF downloaded!")
+      alert("Split request submitted and ZIP downloaded!")
     } catch (error) {
       console.error('Error submitting splits:', error)
       alert(`Error: ${error.message}`)

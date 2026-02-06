@@ -16,7 +16,7 @@ export function generateSplits(pages, pageHeights, renderedHeights) {
       // Get page data or use defaults
       const page = pages[pageNum] || {
         lines: [],
-        pageEndCut: true
+        pageEndCut: 'on'
       }
       
       const lines = [...page.lines].sort((a, b) => a.y - b.y)
@@ -40,19 +40,21 @@ export function generateSplits(pages, pageHeights, renderedHeights) {
           start_page: currentStart.page,
           start_y: currentStart.y,
           end_page: pageNum,
-          end_y: actualY
+          end_y: actualY,
+          stopDocument: line.stopDocument || false
         })
   
         currentStart = { page: pageNum, y: actualY }
       })
   
-      if (page.pageEndCut) {
+      if (page.pageEndCut !== 'off') {
         // Create a split from current position to end of page
         splits.push({
           start_page: currentStart.page,
           start_y: currentStart.y,
           end_page: pageNum,
-          end_y: actualHeight
+          end_y: actualHeight,
+          stopDocument: page.pageEndCut === 'document-split'
         })
   
         currentStart = { page: pageNum + 1, y: 0 }

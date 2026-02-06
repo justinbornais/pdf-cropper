@@ -6,7 +6,8 @@ import fitz  # PyMuPDF
 import os
 import tempfile
 import uuid
-from typing import List
+import zipfile
+from typing import List, Optional
 
 app = FastAPI(title="PDF Hymnal Splitter")
 
@@ -35,6 +36,7 @@ class HymnSplit(BaseModel):
     start_y: float
     end_page: int
     end_y: float
+    stopDocument: Optional[bool] = False
 
 class SplitRequest(BaseModel):
     pdf_id: str
@@ -51,17 +53,20 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def split_hymns(
     src_pdf_path: str,
     hymns: List[HymnSplit],
-    out_pdf_path: str,
+    output_dir: str,
+    base_name: str,
 ):
     """
-    Split a source PDF into a new PDF using lossless vector clipping.
-    Each HymnSplit may span multiple pages and start/end mid-page.
-    Content is scaled to fit within letter size if needed.
+    Split a source PDF into multiple PDFs based on stopDocument flags.
+    Returns a list of output file paths.
     """
     src = fitz.open(src_pdf_path)
-    out = fitz.open()
+    output_files = []
+    
+    current_doc = fitz.open()
+    doc_index = 0
 
-    for hymn in hymns:
+    for i, hymn in enumerate(hymns):
         if hymn.start_page > hymn.end_page:
             raise ValueError("start_page must be <= end_page")
 
@@ -105,7 +110,7 @@ def split_hymns(
         final_height = total_height * scale
 
         # Create output page
-        out_page = out.new_page(width=LETTER_WIDTH, height=LETTER_HEIGHT)
+        out_page = current_doc.new_page(width=LETTER_WIDTH, height=LETTER_HEIGHT)
 
         # Center content horizontally
         x_offset = (LETTER_WIDTH - final_width) / 2
@@ -154,9 +159,21 @@ def split_hymns(
 
             y_cursor += scaled_height
 
-    out.save(out_pdf_path)
-    out.close()
+        # Check if this is a document boundary
+        if hymn.stopDocument or i == len(hymns) - 1:
+            # Save current document
+            output_path = os.path.join(output_dir, f"{base_name}-{doc_index}.pdf")
+            current_doc.save(output_path)
+            output_files.append(output_path)
+            current_doc.close()
+            
+            # Start new document if not the last split
+            if i < len(hymns) - 1:
+                current_doc = fitz.open()
+                doc_index += 1
+
     src.close()
+    return output_files
 
 
 # -----------------------------
@@ -186,11 +203,12 @@ def get_pdf(filename: str):
 @app.post("/split")
 async def split_pdf(request: SplitRequest):
     """
-    Split a PDF hymnal into a new PDF using user-defined regions.
+    Split a PDF hymnal into multiple PDFs using user-defined regions.
+    Returns a zip file containing all generated PDFs.
 
     The frontend must supply:
     - pdf_id: the uploaded PDF identifier
-    - splits: list of HymnSplit objects with start_page, start_y, end_page, end_y
+    - splits: list of HymnSplit objects with start_page, start_y, end_page, end_y, stopDocument
 
     Page numbers are 1-based.
     Coordinates are in PyMuPDF/PDF.js space (origin top-left, y increases downward).
@@ -205,21 +223,26 @@ async def split_pdf(request: SplitRequest):
     if not os.path.exists(input_path):
         raise HTTPException(status_code=404, detail=f"PDF not found: {request.pdf_id}")
 
-    # Generate output filename in the same directory
+    # Generate output directory
     base_name = os.path.splitext(request.pdf_id)[0]
-    output_filename = f"{base_name}-output.pdf"
-    output_path = os.path.join(UPLOAD_DIR, output_filename)
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            output_files = split_hymns(input_path, request.splits, tmpdir, base_name)
+        except Exception as e:
+            import traceback
+            print(f"Error splitting PDF: {str(e)}")
+            print(traceback.format_exc())
+            raise HTTPException(status_code=500, detail=str(e))
 
-    try:
-        split_hymns(input_path, request.splits, output_path)
-    except Exception as e:
-        import traceback
-        print(f"Error splitting PDF: {str(e)}")
-        print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
+        # Create zip file
+        zip_path = os.path.join(UPLOAD_DIR, f"{base_name}-output.zip")
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for pdf_file in output_files:
+                zipf.write(pdf_file, os.path.basename(pdf_file))
 
-    return FileResponse(
-        output_path,
-        media_type="application/pdf",
-        filename="split_hymns.pdf",
-    )
+        return FileResponse(
+            zip_path,
+            media_type="application/zip",
+            filename="split_hymns.zip",
+        )
