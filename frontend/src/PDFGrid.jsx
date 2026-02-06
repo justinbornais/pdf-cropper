@@ -6,7 +6,9 @@ export default function PDFGrid({
   pdfId,
   pages,
   setPages,
-  setPageHeights
+  setPageHeights,
+  setRenderedHeights,
+  setLineHistory
 }) {
   const [numPages, setNumPages] = useState(null)
 
@@ -27,6 +29,8 @@ export default function PDFGrid({
             pages={pages}
             setPages={setPages}
             setPageHeights={setPageHeights}
+            setRenderedHeights={setRenderedHeights}
+            setLineHistory={setLineHistory}
           />
         ))}
       </div>

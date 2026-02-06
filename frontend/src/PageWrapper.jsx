@@ -1,12 +1,14 @@
 import { Page } from "react-pdf"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import { v4 as uuid } from "uuid"
 
 export default function PageWrapper({
   pageNumber,
   pages,
   setPages,
-  setPageHeights
+  setPageHeights,
+  setRenderedHeights,
+  setLineHistory
 }) {
   const pageData = pages[pageNumber] || {
     lines: [],
@@ -22,14 +24,23 @@ export default function PageWrapper({
     }))
   }
 
+  useEffect(() => {
+    updatePage(pageData); //eslint-disable-next-line
+  }, []);
+
   const handleClick = (e) => {
     const rect = overlayRef.current.getBoundingClientRect()
     const y = e.clientY - rect.top
+    
+    const lineId = uuid()
 
     updatePage({
       ...pageData,
-      lines: [...pageData.lines, { id: uuid(), y }]
+      lines: [...pageData.lines, { id: lineId, y }]
     })
+
+    // Add to history
+    setLineHistory(prev => [...prev, { pageNumber, lineId }])
   }
 
   return (
@@ -44,6 +55,14 @@ export default function PageWrapper({
               ...prev,
               [pageNumber]: page.height
             }))
+            // Store rendered height from DOM
+            if (overlayRef.current) {
+              const renderedHeight = overlayRef.current.getBoundingClientRect().height
+              setRenderedHeights(prev => ({
+                ...prev,
+                [pageNumber]: renderedHeight
+              }))
+            }
           }}
         />
 

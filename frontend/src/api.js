@@ -11,7 +11,7 @@ export async function uploadPDF(file) {
 }
 
 export async function submitSplits(pdfId, splits) {
-  return fetch("/split", {
+  return fetch("http://localhost:8000/split", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ pdf_id: pdfId, splits })
