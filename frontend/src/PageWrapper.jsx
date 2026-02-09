@@ -17,7 +17,6 @@ export default function PageWrapper({
 
   const overlayRef = useRef(null);
   const wrapperRef = useRef(null);
-  const [lastClick, setLastClick] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
 
   const updatePage = (data) => {
@@ -57,36 +56,39 @@ export default function PageWrapper({
   }, []);
 
   const handleClick = (e) => {
-    if (!isVisible) return; // Prevent clicks on placeholder
+    if (!isVisible) return; // Prevent clicks on placeholder.
     
     const rect = overlayRef.current.getBoundingClientRect()
     const y = e.clientY - rect.top
-    const now = Date.now()
 
-    // Check for double-click within proximity
-    if (lastClick && 
-        Math.abs(lastClick.y - y) <= 10 && 
-        now - lastClick.time < 500) {
-      
-      // Find the line that was just created
-      const lastLine = pageData.lines[pageData.lines.length - 1]
-      if (lastLine) {
-        // Convert to document split (purple line)
+    // Check if click is near an existing line (within 10 pixels).
+    const nearbyLine = pageData.lines.find(line => Math.abs(line.y - y) <= 10)
+
+    if (nearbyLine) {
+      // Clicking on existing line - cycle through states
+      if (nearbyLine.stopDocument) {
+        // If it's a stopDocument line, remove it.
+        updatePage({
+          ...pageData,
+          lines: pageData.lines.filter(line => line.id !== nearbyLine.id)
+        })
+        // Remove from history.
+        setLineHistory(prev => prev.filter(item => item.lineId !== nearbyLine.id))
+      } else {
+        // If it's a regular line, convert to stopDocument.
         updatePage({
           ...pageData,
           lines: pageData.lines.map(line => 
-            line.id === lastLine.id 
+            line.id === nearbyLine.id 
               ? { ...line, stopDocument: true }
               : line
           )
         })
       }
-      
-      setLastClick(null) // Reset after double-click
       return
     }
 
-    // Single click - add new line
+    // No nearby line - create new line
     const lineId = uuid()
 
     updatePage({
@@ -96,9 +98,6 @@ export default function PageWrapper({
 
     // Add to history
     setLineHistory(prev => [...prev, { pageNumber, lineId }])
-    
-    // Track this click for double-click detection
-    setLastClick({ y, time: now })
   }
 
   const cycleScissorsState = () => {
