@@ -1,0 +1,165 @@
+body {
+  font-family: sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  padding: 0;
+}
+
+.app {
+  padding: 20px;
+  padding-top: 100px;
+}
+
+.controls-sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 15px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+  align-items: start;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+@media (min-width: 1400px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (min-width: 1800px) {
+  .grid {
+    grid-template-columns: repeat(6, 1fr);
+    max-width: 100%;
+  }
+}
+
+.page-wrapper {
+  position: relative;
+  display: inline-block;
+  background: white;
+}
+
+.react-pdf__Page {
+  display: inline-block !important;
+}
+
+.react-pdf__Page canvas {
+  max-width: 100%;
+  width: 100% !important;
+  height: auto !important;
+}
+
+.split-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: red;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.split-line.document-split {
+  background: purple;
+  height: 3px;
+}
+
+.scissors {
+  position: absolute;
+  top: 8px;
+  right: -36px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 20px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.scissors.active {
+  color: red;
+  background: #ffcccc;
+}
+
+.scissors.document-split {
+  color: purple;
+  background: #e6ccff;
+}
+
+.page-button {
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+.undo-button {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.undo-button:hover {
+  background: #ff5252;
+}
+
+.undo-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.scissors-control {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.scissors-control.off {
+  background: #e0e0e0;
+  color: #666;
+}
+
+.scissors-control.off:hover {
+  background: #d0d0d0;
+}
+
+.scissors-control.on {
+  background: #ffcccc;
+  color: #c00;
+}
+
+.scissors-control.on:hover {
+  background: #ffb3b3;
+}
+
+.scissors-control.document-split {
+  background: #e6ccff;
+  color: #800080;
+}
+
+.scissors-control.document-split:hover {
+  background: #d9b3ff;
+}
+
+.submit {
+  margin-top: 20px;
+  padding: 10px;
+  font-size: 16px;
+}
