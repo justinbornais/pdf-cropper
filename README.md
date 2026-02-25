@@ -1,11 +1,11 @@
 # pdf-cropper
 Lightweight web app to split, merge, and crop PDF hymnals while preserving vector content.
 
-**Quick start**
+## Quick Start
 - **Frontend:** run `npm run start` from the `frontend` folder to start the React UI.
 - **Backend (dev):** run `uvicorn app:app --reload` from the `backend` folder to start the FastAPI server.
 
-**Deployment**
+### Deployment
 - **Python deps:** install from `backend/requirements.txt`.
 - **Production server (recommended):** use `uvicorn` with a process manager or an ASGI server behind a reverse proxy. Example (from `backend`):
 
@@ -19,21 +19,34 @@ uvicorn app:app --reload
 
 - **Containerized:** build a small image using the `backend` folder, install `requirements.txt`, expose port 8000, and run the ASGI server. Serve the `frontend` build with any static host or web server and configure CORS origins in `backend/app.py` as needed.
 
-**Usage**
-- **Upload:** use the frontend to upload a PDF; the server returns a `pdf_id` stored in the `uploads` folder.
-- **Define splits/merges:** the `/split` API accepts a `SplitRequest` with `splits` (see `backend/app.py` for the `HymnSplit` model). Each `HymnSplit` has `start_page`, `start_y`, `end_page`, `end_y`, and optional `stopDocument`.
+### Usage
+Upload a PDF using the frontend application, which will save the file inside an `uploads` folder for the backend named with a specific ID.
 
-- **Arbitrary page-splitting:** you can split anywhere — inside a page or between pages — by specifying fractional `start_y`/`end_y` coordinates and 1-based page numbers. The backend will extract exactly the rectangular regions you request and compose them into new PDF pages sized to letter (optionally changeable in `app.py`).
+The webpage will render each page of the PDF in a grid, with scissors icons in between each page. The colors of the icon mean the following:
+- **Transparent:** The page will not split. This means the first page will merge with the second page to create one large page.
+- **Red (default):** The page will split. This is the default option, as it makes sense upon starting that each page should be separate.
+- **Purple:** The PDF will end with the left page, and a new document will begin with the next page.
 
-- **Document-splitting:** set `stopDocument=true` on a `HymnSplit` to force a new output PDF document boundary at that split. Without `stopDocument`, sequential splits will be composed into the same output PDF until a boundary is reached.
+There are also three buttons at the top of the page that control the scissors icons:
+- **All Off:** Makes all scissors transparent. This effectively means all pages will become one.
+- **All On:** Makes all scissors red.
+- **All Split:** Makes all scissors purple.
 
-- **Merging pages without quality loss:** when a split spans multiple source pages (for example, merging the bottom of page 1 with the top of page 2), the service extracts the original PDF vector content and places it into a single output page at a scaled resolution that preserves vectors and text (no bitmap rasterization). This retains quality and vector graphics.
+You can then click anywhere on the page to specify **page splits** (red) or **document splits** (purple). The behavior is as follows:
+- Clicking once on the page will draw a **red** line, indicating the page will be split into two pages at that point.
+- Clicking a red line will turn it **purple**, indicating the document itself will end at that point, and a new document will start below.
+- Clicking a purple line will remove it entirely.
+- You may also press **Undo line** (or `Ctrl + Z`) to undo the last line you clicked.
 
-- **Output:** the server zips generated PDFs and returns a single ZIP file for download.
+Once you are done, click **Submit Splits** and you will be given a ZIP file.
 
-**Files**
-- `backend/app.py`: main FastAPI backend implementing upload and split logic. See the `HymnSplit` and `SplitRequest` models.
-- `backend/requirements.txt`: pinned dependencies for the backend.
-- `frontend/`: React app and UI.
+An example usage scenario:
 
-If you want version pins added to `backend/requirements.txt` or a Dockerfile + example `docker-compose.yml`, tell me and I will add them.
+> I have a two-page PDF containing three hymns. The second hymn starts in the middle of the first page, and ends in the middle of the second page.
+>
+> If I wanted to split this PDF into three separate PDF documents, I would do the following:
+> 1. Draw a purple line right above the beginning of the second hymn.
+> 2. Turn the scissors icon off (transparent).
+> 3. Draw a purple line above the beginning of the third hymn.
+>
+> This will result in a ZIP containing three PDFs: one with the first hymn only, one with the second hymn (both sections merged into one page), and one with the third hymn only.
