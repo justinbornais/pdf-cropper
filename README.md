@@ -32,7 +32,7 @@ npm run build # output in frontend/build/
 A GitHub Actions workflow (`.github/workflows/deploy.yml`) automatically builds and deploys the site to the `gh-pages` branch on every push to `main`. Once GitHub Pages is enabled for that branch in your repository settings, the site will be available at:
 
 ```
-https://pdf-cropper.justinbornais.ca
+https://pdfcrop.justinbornais.ca
 ```
 
 No environment variables or secrets are needed beyond the default `GITHUB_TOKEN` that Actions already has.
