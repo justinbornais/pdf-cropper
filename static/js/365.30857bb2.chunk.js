@@ -1,0 +1,1 @@
+(self.webpackChunkfrontend=self.webpackChunkfrontend||[]).push([[365],{365(){}}]);
