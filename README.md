@@ -1,26 +1,46 @@
 # pdf-cropper
-Lightweight web app to split, merge, and crop PDF hymnals while preserving vector content.
+Lightweight web app to split, merge, and crop PDF hymnals while preserving full vector quality — runs entirely in the browser, no server required.
 
-## Quick Start
-- **Frontend:** run `npm run start` from the `frontend` folder to start the React UI.
-- **Backend (dev):** run `uvicorn app:app --reload` from the `backend` folder to start the FastAPI server.
+## How it works
 
-### Deployment
-- **Python deps:** install from `backend/requirements.txt`.
-- **Production server (recommended):** use `uvicorn` with a process manager or an ASGI server behind a reverse proxy. Example (from `backend`):
+All PDF processing runs **client-side via WebAssembly**. The app compiles [MuPDF](https://mupdf.com/) — the same C PDF engine used by many professional tools — to WASM using the official [`mupdf` npm package](https://www.npmjs.com/package/mupdf) published by Artifex. This means:
+
+- **No backend, no uploads.** Your PDF never leaves your machine.
+- **True PDF accuracy.** Content is cropped and placed using the real MuPDF rendering pipeline, not a JS reimplementation. Fonts, vectors, and embedded images are preserved exactly.
+- **Statically deployable.** The built site is plain HTML + JS + a `.wasm` file (~9.5 MB) and can be served from any static host (GitHub Pages, S3, Netlify, etc.).
+
+The heavy work happens in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API) so the UI stays responsive while large PDFs are rendered or split. MuPDF is loaded asynchronously inside the worker via a dynamic `import()`, and any messages sent before initialization completes are queued and drained once the WASM module is ready.
+
+## Running locally
+
+You only need Node.js (v18+). There is no backend to start.
 
 ```bash
-pip install -r requirements.txt
-# run with multiple workers via gunicorn+uvicorn workers (example)
-gunicorn -k uvicorn.workers.UvicornWorker app:app -w 4 --bind 0.0.0.0:8000
-# or default usage
-uvicorn app:app --reload
+npm install
+npm start # opens at http://localhost:3000
 ```
 
-- **Containerized:** build a small image using the `backend` folder, install `requirements.txt`, expose port 8000, and run the ASGI server. Serve the `frontend` build with any static host or web server and configure CORS origins in `backend/app.py` as needed.
+To produce an optimised production build:
 
-### Usage
-Upload a PDF using the frontend application, which will save the file inside an `uploads` folder for the backend named with a specific ID.
+```bash
+npm run build # output in build/
+```
+
+## Deployment
+
+A GitHub Actions workflow (`.github/workflows/deploy.yml`) automatically builds and deploys the site to the `gh-pages` branch on every push to `main`. Once GitHub Pages is enabled for that branch in your repository settings, the site will be available at:
+
+```
+https://pdfcrop.justinbornais.ca
+```
+
+No environment variables or secrets are needed beyond the default `GITHUB_TOKEN` that Actions already has.
+
+---
+
+## Usage
+
+Upload a PDF using the file picker. The file is read locally — nothing is sent to a server.
 
 The webpage will render each page of the PDF in a grid, with scissors icons in between each page. The colors of the icon mean the following:
 - **Transparent:** The page will not split. This means the first page will merge with the second page to create one large page.
