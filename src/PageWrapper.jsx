@@ -143,42 +143,35 @@ export default function PageWrapper({
 
   return (
     <div className="page-wrapper" ref={wrapperRef}>
-      <div className="page-overlay" ref={overlayRef} onClick={handleClick}>
-        {imgUrl ? (
-          <img
-            src={imgUrl}
-            alt={`Page ${pageNumber}`}
-            style={{ width: "100%", display: "block" }}
-            onLoad={() => {
-              // Measure the rendered CSS height for coordinate conversion
-              if (overlayRef.current) {
-                const renderedHeight = overlayRef.current.getBoundingClientRect().height
-                setRenderedHeights(prev => ({ ...prev, [pageNumber]: renderedHeight }))
-              }
-            }}
-          />
-        ) : (
-          <div style={{
-            width: '220px',
-            height: '300px',
-            background: '#e0e0e0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#999',
-            fontSize: '14px'
-          }}>
-            Page {pageNumber}
-          </div>
-        )}
+      <div className="page-card">
+        <div className="page-overlay" ref={overlayRef} onClick={handleClick}>
+          {imgUrl ? (
+            <img
+              src={imgUrl}
+              alt={`Page ${pageNumber}`}
+              style={{ width: "100%", display: "block" }}
+              onLoad={() => {
+                // Measure the rendered CSS height for coordinate conversion
+                if (overlayRef.current) {
+                  const renderedHeight = overlayRef.current.getBoundingClientRect().height
+                  setRenderedHeights(prev => ({ ...prev, [pageNumber]: renderedHeight }))
+                }
+              }}
+            />
+          ) : (
+            <div className="page-placeholder" />
+          )}
 
-        {pageData.lines.map(line => (
-          <div
-            key={line.id}
-            className={`split-line ${line.stopDocument ? 'document-split' : ''}`}
-            style={{ top: `${line.y}px` }}
-          />
-        ))}
+          <span className="page-number-badge">{pageNumber}</span>
+
+          {pageData.lines.map(line => (
+            <div
+              key={line.id}
+              className={`split-line ${line.stopDocument ? 'document-split' : ''}`}
+              style={{ top: `${line.y}px` }}
+            />
+          ))}
+        </div>
       </div>
 
       <button

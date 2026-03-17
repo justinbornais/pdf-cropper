@@ -1,165 +1,409 @@
+/* ============================================================
+   PDF Cropper — global styles
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg:              #f4f4f5;
+  --surface:         #ffffff;
+  --border:          #e4e4e7;
+  --text-primary:    #18181b;
+  --text-secondary:  #71717a;
+  --text-muted:      #a1a1aa;
+
+  --accent:          #6366f1;
+  --accent-hover:    #4f46e5;
+  --accent-subtle:   #eef2ff;
+
+  --split-color:     #ef4444;
+  --split-bg:        #fef2f2;
+  --split-bg-hover:  #fee2e2;
+  --split-border:    #fca5a5;
+
+  --doc-color:       #a855f7;
+  --doc-bg:          #faf5ff;
+  --doc-bg-hover:    #f3e8ff;
+  --doc-border:      #d8b4fe;
+
+  --shadow-sm:   0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 6px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-page: 0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+
+  --radius:    8px;
+  --radius-sm: 5px;
+  --toolbar-h: 56px;
+}
+
 body {
-  font-family: sans-serif;
-  background: #f5f5f5;
   margin: 0;
   padding: 0;
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+               Arial, sans-serif;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* ---- App shell ---- */
 
 .app {
-  padding: 20px;
-  padding-top: 100px;
+  padding-top: var(--toolbar-h);
+  min-height: 100vh;
 }
 
-.controls-sticky {
+/* ---- Toolbar ---- */
+
+.toolbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background: white;
-  padding: 15px 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: var(--toolbar-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 8px rgba(0,0,0,0.05);
   z-index: 1000;
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 6px;
+  padding: 0 20px;
 }
+
+.toolbar-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.toolbar-filename {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg);
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  margin-right: auto;
+  flex-shrink: 1;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+/* ---- Buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 13px;
+  height: 32px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+.btn:active { transform: scale(0.96); }
+
+.btn-neutral {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.btn-neutral:hover { background: #ebebed; }
+
+.btn-split-off {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+.btn-split-off:hover { background: #ebebed; }
+
+.btn-split-on {
+  background: var(--split-bg);
+  border-color: var(--split-border);
+  color: var(--split-color);
+}
+.btn-split-on:hover { background: var(--split-bg-hover); }
+
+.btn-split-doc {
+  background: var(--doc-bg);
+  border-color: var(--doc-border);
+  color: var(--doc-color);
+}
+.btn-split-doc:hover { background: var(--doc-bg-hover); }
+
+.btn-primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  margin-left: 8px;
+  padding: 0 18px;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+
+/* ---- Upload screen ---- */
+
+.upload-screen {
+  min-height: calc(100vh - var(--toolbar-h));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.upload-card {
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  padding: 52px 48px;
+  text-align: center;
+  max-width: 420px;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.upload-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-subtle);
+}
+
+.upload-icon {
+  font-size: 44px;
+  margin-bottom: 14px;
+  line-height: 1;
+}
+
+.upload-card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.upload-card p {
+  margin: 0 0 28px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.upload-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.upload-label:hover { background: var(--accent-hover); }
+
+.upload-label input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* ---- PDF grid ---- */
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 2rem 3rem;
+  padding: 2rem 2.5rem;
   align-items: start;
-  margin: 0 auto;
-  padding: 0 2rem;
 }
 
 @media (min-width: 1400px) {
   .grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 }
 
 @media (min-width: 1800px) {
   .grid {
     grid-template-columns: repeat(6, 1fr);
-    max-width: 100%;
   }
 }
 
+/* ---- Page card ---- */
+
 .page-wrapper {
   position: relative;
-  display: inline-block;
-  background: white;
 }
 
-.react-pdf__Page {
-  display: inline-block !important;
+.page-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-page);
+  overflow: hidden;
 }
 
-.react-pdf__Page canvas {
-  max-width: 100%;
-  width: 100% !important;
-  height: auto !important;
+.page-overlay {
+  position: relative;
+  cursor: crosshair;
+  user-select: none;
+  display: block;
 }
+
+.page-overlay img {
+  display: block;
+  width: 100%;
+}
+
+.page-number-badge {
+  position: absolute;
+  bottom: 7px;
+  left: 7px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 99px;
+  pointer-events: none;
+  z-index: 5;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Placeholder skeleton ---- */
+
+.page-placeholder {
+  aspect-ratio: 8.5 / 11;
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e8e8e8 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position:  200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ---- Split lines (position coordinates untouched) ---- */
 
 .split-line {
   position: absolute;
   left: 0;
   right: 0;
   height: 2px;
-  background: red;
+  background: var(--split-color);
   pointer-events: none;
   z-index: 10;
 }
 
 .split-line.document-split {
-  background: purple;
-  height: 3px;
+  background: var(--doc-color);
 }
+
+/* ---- Scissors button ---- */
 
 .scissors {
   position: absolute;
   top: 8px;
-  right: -36px;
+  right: -40px;
   cursor: pointer;
-  background: none;
-  border: none;
-  font-size: 20px;
-  padding: 4px 8px;
-  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s, background 0.12s, border-color 0.12s;
+  z-index: 20;
+  padding: 0;
+  line-height: 1;
+}
+
+.scissors:hover {
+  transform: scale(1.12);
+  box-shadow: var(--shadow-md);
 }
 
 .scissors.active {
-  color: red;
-  background: #ffcccc;
+  background: var(--split-bg);
+  border-color: var(--split-border);
 }
 
 .scissors.document-split {
-  color: purple;
-  background: #e6ccff;
+  background: var(--doc-bg);
+  border-color: var(--doc-border);
 }
 
-.page-button {
-  margin-bottom: 20px;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 4px;
+/* ---- Status screens (loading / error) ---- */
+
+.status-screen {
+  min-height: calc(100vh - var(--toolbar-h));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
-.undo-button {
-  background: #ff6b6b;
-  color: white;
-  border: none;
-  cursor: pointer;
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  flex-shrink: 0;
 }
 
-.undo-button:hover {
-  background: #ff5252;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.undo-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
+.status-screen.error {
+  color: var(--split-color);
 }
 
-.scissors-control {
-  padding: 10px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.scissors-control.off {
-  background: #e0e0e0;
-  color: #666;
-}
-
-.scissors-control.off:hover {
-  background: #d0d0d0;
-}
-
-.scissors-control.on {
-  background: #ffcccc;
-  color: #c00;
-}
-
-.scissors-control.on:hover {
-  background: #ffb3b3;
-}
-
-.scissors-control.document-split {
-  background: #e6ccff;
-  color: #800080;
-}
-
-.scissors-control.document-split:hover {
-  background: #d9b3ff;
-}
-
-.submit {
-  margin-top: 20px;
-  padding: 10px;
-  font-size: 16px;
+.status-screen.error .spinner {
+  border-top-color: var(--split-color);
 }

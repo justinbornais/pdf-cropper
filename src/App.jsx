@@ -108,43 +108,36 @@ export default function App() {
 
   return (
     <div className="app">
-      <h1>PDF Hymn Splitter</h1>
+      <header className="toolbar">
+        <span className="toolbar-title">PDF Hymn Splitter</span>
+
+        {pdfFile ? (
+          <>
+            <span className="toolbar-filename">{pdfFile.name}</span>
+            <div className="toolbar-divider" />
+            <button className="btn btn-neutral" onClick={handleUndoLine}>↶ Undo</button>
+            <div className="toolbar-divider" />
+            <button className="btn btn-split-off" onClick={() => setAllScissors('off')}>✂ All Off</button>
+            <button className="btn btn-split-on"  onClick={() => setAllScissors('on')}>✂ All On</button>
+            <button className="btn btn-split-doc" onClick={() => setAllScissors('document-split')}>✂ All Split</button>
+            <button className="btn btn-primary" onClick={handleSubmit}>↓ Download</button>
+          </>
+        ) : (
+          <span className="toolbar-spacer" />
+        )}
+      </header>
 
       {!pdfFile && <UploadPDF onUpload={setPdfFile} />}
 
       {pdfFile && (
-        <>
-          <div className="controls-sticky">
-            <button className="page-button undo-button" onClick={handleUndoLine}>
-              ↶ Undo Line
-            </button>
-            
-            <button className="page-button scissors-control off" onClick={() => setAllScissors('off')}>
-              ✂️ All Off
-            </button>
-            
-            <button className="page-button scissors-control on" onClick={() => setAllScissors('on')}>
-              ✂️ All On
-            </button>
-            
-            <button className="page-button scissors-control document-split" onClick={() => setAllScissors('document-split')}>
-              ✂️ All Split
-            </button>
-
-            <button className="page-button submit" onClick={handleSubmit}>
-              Submit Splits
-            </button>
-          </div>
-          
-          <PDFGrid
-            pdfFile={pdfFile}
-            pages={pages}
-            setPages={setPages}
-            setPageHeights={setPageHeights}
-            setRenderedHeights={setRenderedHeights}
-            setLineHistory={setLineHistory}
-          />
-        </>
+        <PDFGrid
+          pdfFile={pdfFile}
+          pages={pages}
+          setPages={setPages}
+          setPageHeights={setPageHeights}
+          setRenderedHeights={setRenderedHeights}
+          setLineHistory={setLineHistory}
+        />
       )}
     </div>
   )

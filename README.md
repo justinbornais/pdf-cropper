@@ -16,7 +16,6 @@ The heavy work happens in a [Web Worker](https://developer.mozilla.org/en-US/doc
 You only need Node.js (v18+). There is no backend to start.
 
 ```bash
-cd frontend
 npm install
 npm start # opens at http://localhost:3000
 ```
@@ -24,7 +23,7 @@ npm start # opens at http://localhost:3000
 To produce an optimised production build:
 
 ```bash
-npm run build # output in frontend/build/
+npm run build # output in build/
 ```
 
 ## Deployment

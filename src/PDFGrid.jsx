@@ -31,8 +31,18 @@ export default function PDFGrid({
     })
   }, [pdfFile])
 
-  if (loadError) return <div className="loading" style={{ color: "red" }}>Error: {loadError}</div>
-  if (!numPages) return <div className="loading">Loading PDF…</div>
+  if (loadError) return (
+    <div className="status-screen error">
+      <div className="spinner" />
+      <span>Error: {loadError}</span>
+    </div>
+  )
+  if (!numPages) return (
+    <div className="status-screen">
+      <div className="spinner" />
+      <span>Loading PDF…</span>
+    </div>
+  )
 
   return (
     <div className="grid">
