@@ -8,6 +8,7 @@ const LETTER_HEIGHT = 11 * 72;  // 792
 // mupdf initializes its WASM asynchronously.  Queue any messages that arrive
 // before init is done, then drain them once the module is ready.
 let mupdf = null;
+let initError = null;  // set on failure; prevents new messages being queued forever
 let srcDoc = null;
 const messageQueue = [];
 
@@ -17,15 +18,21 @@ const initPromise = import("mupdf").then((m) => {
   for (const e of messageQueue) dispatch(e);
   messageQueue.length = 0;
 }).catch((err) => {
+  // Record the failure so future onmessage calls reply immediately instead of queueing
+  initError = err?.message || String(err);
   // Surface init failures to every caller that is currently waiting
-  const msg = err?.message || String(err);
   for (const e of messageQueue) {
-    self.postMessage({ type: "ERROR", id: e.data.id, error: `mupdf init failed: ${msg}` });
+    self.postMessage({ type: "ERROR", id: e.data.id, error: `mupdf init failed: ${initError}` });
   }
   messageQueue.length = 0;
 });
 
 self.onmessage = (e) => {
+  if (initError) {
+    // Init already failed — reply immediately rather than queueing forever
+    self.postMessage({ type: "ERROR", id: e.data.id, error: `mupdf init failed: ${initError}` });
+    return;
+  }
   if (!mupdf) {
     // mupdf not ready yet — hold the message until initPromise resolves
     messageQueue.push(e);
@@ -43,6 +50,8 @@ function dispatch(e) {
       handleRenderPage(id, payload);
     } else if (type === "SPLIT") {
       handleSplit(id, payload);
+    } else {
+      self.postMessage({ type: "ERROR", id, error: `Unknown message type: "${type}"` });
     }
   } catch (err) {
     self.postMessage({ type: "ERROR", id, error: err.message || String(err) });
