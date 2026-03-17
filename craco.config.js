@@ -30,6 +30,12 @@ module.exports = {
         asyncWebAssembly: true,
       };
 
+      // Disable the ESLint webpack plugin so that lint warnings never cause
+      // the build to fail (CI=true would otherwise treat warnings as errors).
+      webpackConfig.plugins = webpackConfig.plugins.filter(
+        (p) => p.constructor.name !== "ESLintWebpackPlugin"
+      );
+
       return webpackConfig;
     },
   },

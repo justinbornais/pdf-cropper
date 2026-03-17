@@ -36,10 +36,10 @@ function getWorker() {
 }
 
 function call(type, payload, transfer = []) {
-  const id = nextId++;
+  const requestId = nextId++;
   return new Promise((resolve) => {
-    pending.set(id, resolve);
-    getWorker().postMessage({ type, id, payload }, transfer);
+    pending.set(requestId, resolve);
+    getWorker().postMessage({ type, id: requestId, payload }, transfer);
   });
 }
 

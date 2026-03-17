@@ -58,13 +58,14 @@ export default function PageWrapper({
       }
     );
 
-    if (wrapperRef.current) {
-      observer.observe(wrapperRef.current);
+    const node = wrapperRef.current;
+    if (node) {
+      observer.observe(node);
     }
 
     return () => {
-      if (wrapperRef.current) {
-        observer.unobserve(wrapperRef.current);
+      if (node) {
+        observer.unobserve(node);
       }
     };
   }, []);

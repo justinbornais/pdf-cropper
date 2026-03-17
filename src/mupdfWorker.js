@@ -12,7 +12,9 @@ let initError = null;  // set on failure; prevents new messages being queued for
 let srcDoc = null;
 const messageQueue = [];
 
-const initPromise = import("mupdf").then((m) => {
+// Top-level await in the mupdf WASM module means we must use a dynamic import
+// and explicitly drain any queued messages once the module is ready.
+void import("mupdf").then((m) => {
   mupdf = m;
   // Drain messages that arrived while we were initializing
   for (const e of messageQueue) dispatch(e);
@@ -122,8 +124,12 @@ function handleSplit(id, { splits }) {
 function splitHymns(src, hymns) {
   const outputFiles = [];
 
+  // compress,compress-images,compress-fonts: deflate-compress all streams
+  // (without these the default PDF output is uncompressed, causing ~5x bloat)
+  const WRITER_OPTS = "compress,compress-images,compress-fonts";
+
   let outBuffer = new mupdf.Buffer();
-  let writer    = new mupdf.DocumentWriter(outBuffer, "pdf", "");
+  let writer    = new mupdf.DocumentWriter(outBuffer, "pdf", WRITER_OPTS);
 
   hymns.forEach((hymn, i) => {
     const startIdx = hymn.start_page - 1;  // convert to 0-based
@@ -221,12 +227,25 @@ function splitHymns(src, hymns) {
     // -----------------------------------------------------------------------
     if (hymn.stopDocument || i === hymns.length - 1) {
       writer.close();
-      // .slice() gives us an independent copy from the mupdf Buffer
-      outputFiles.push(outBuffer.asUint8Array().slice());
+
+      // Post-process the completed document to minimise file size:
+      //   subsetFonts()  — trims embedded font programs to only the glyphs
+      //                    actually present on the output pages
+      //   saveToBuffer() — re-saves with:
+      //     compress*      deflate-compress all streams
+      //     garbage=4      remove unreferenced objects, compact xref,
+      //                    and deduplicate identical stream content
+      const tmpDoc = new mupdf.PDFDocument(outBuffer.asUint8Array());
+      tmpDoc.subsetFonts();
+      const finalBuf = tmpDoc.saveToBuffer(
+        "compress,compress-images,compress-fonts,garbage=4"
+      );
+      tmpDoc.destroy();
+      outputFiles.push(finalBuf.asUint8Array().slice());
 
       if (i < hymns.length - 1) {
         outBuffer = new mupdf.Buffer();
-        writer    = new mupdf.DocumentWriter(outBuffer, "pdf", "");
+        writer    = new mupdf.DocumentWriter(outBuffer, "pdf", WRITER_OPTS);
       }
     }
   });

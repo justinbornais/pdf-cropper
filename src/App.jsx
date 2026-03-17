@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import UploadPDF from "./UploadPDF"
 import PDFGrid from "./PDFGrid"
 import { submitSplits } from "./api"
@@ -12,24 +12,7 @@ export default function App() {
   const [renderedHeights, setRenderedHeights] = useState({})
   const [lineHistory, setLineHistory] = useState([])
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Check for Ctrl+Z (or Cmd+Z on Mac)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault()
-        handleUndoLine()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    // Cleanup listener on unmount
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [lineHistory, pages]) // Dependencies needed for handleUndoLine
-
-  const handleUndoLine = () => {
+  const handleUndoLine = useCallback(() => {
     if (lineHistory.length === 0) {
       alert("No lines to undo")
       return
@@ -49,7 +32,23 @@ export default function App() {
 
     // Remove from history
     setLineHistory(prev => prev.slice(0, -1))
-  }
+  }, [lineHistory, pages])
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check for Ctrl+Z (or Cmd+Z on Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault()
+        handleUndoLine()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [handleUndoLine])
 
   const setAllScissors = (state) => {
     const allPageNumbers = Object.keys(pageHeights).map(Number)
