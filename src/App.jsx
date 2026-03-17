@@ -3,16 +3,10 @@ import UploadPDF from "./UploadPDF"
 import PDFGrid from "./PDFGrid"
 import { submitSplits } from "./api"
 import { generateSplits } from "./splitUtils"
-import * as pdfjsLib from "pdfjs-dist";
-import "pdfjs-dist/build/pdf.worker.min.mjs";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+import { zipSync } from "fflate"
 
 export default function App() {
-  const [pdfId, setPdfId] = useState(null)
+  const [pdfFile, setPdfFile] = useState(null)
   const [pages, setPages] = useState({})
   const [pageHeights, setPageHeights] = useState({})
   const [renderedHeights, setRenderedHeights] = useState({})
@@ -74,34 +68,41 @@ export default function App() {
 
   const handleSubmit = async () => {
     const splits = generateSplits(pages, pageHeights, renderedHeights)
-    
-    console.log('Submitting splits:', { pdfId, splits })
+    console.log('Submitting splits:', splits)
 
     try {
-      const response = await submitSplits(pdfId, splits)
-      
-      if (!response.ok) {
-        const error = await response.text()
-        console.error('Error response:', error)
-        alert(`Error: ${error}`)
+      const response = await submitSplits(splits)
+
+      if (response.type === 'ERROR') {
+        console.error('Split error:', response.error)
+        alert(`Error: ${response.error}`)
         return
       }
-      
-      // Download the resulting ZIP file
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'split_hymns.zip'
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-      
-      alert("Split request submitted and ZIP downloaded!")
-    } catch (error) {
-      console.error('Error submitting splits:', error)
-      alert(`Error: ${error.message}`)
+
+      const outputs = response.result // Uint8Array[]
+
+      const download = (data, filename) => {
+        const url = URL.createObjectURL(new Blob([data]))
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        a.click()
+        URL.revokeObjectURL(url)
+      }
+
+      if (outputs.length === 1) {
+        download(outputs[0], 'hymns.pdf')
+      } else {
+        // Bundle multiple output PDFs into a single ZIP
+        const zipInput = {}
+        outputs.forEach((buf, i) => { zipInput[`hymns-${i}.pdf`] = buf })
+        download(zipSync(zipInput), 'split_hymns.zip')
+      }
+
+      alert('Download complete!')
+    } catch (err) {
+      console.error('Error submitting splits:', err)
+      alert(`Error: ${err.message}`)
     }
   }
 
@@ -109,9 +110,9 @@ export default function App() {
     <div className="app">
       <h1>PDF Hymn Splitter</h1>
 
-      {!pdfId && <UploadPDF onUpload={setPdfId} />}
+      {!pdfFile && <UploadPDF onUpload={setPdfFile} />}
 
-      {pdfId && (
+      {pdfFile && (
         <>
           <div className="controls-sticky">
             <button className="page-button undo-button" onClick={handleUndoLine}>
@@ -136,7 +137,7 @@ export default function App() {
           </div>
           
           <PDFGrid
-            pdfId={pdfId}
+            pdfFile={pdfFile}
             pages={pages}
             setPages={setPages}
             setPageHeights={setPageHeights}

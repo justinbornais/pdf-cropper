@@ -1,12 +1,9 @@
-import { uploadPDF } from "./api"
-
 export default function UploadPDF({ onUpload }) {
-  const handleChange = async (e) => {
+  const handleChange = (e) => {
     const file = e.target.files[0]
     if (!file) return
-
-    const data = await uploadPDF(file)
-    onUpload(data.pdf_id)
+    // Pass the File object directly — no HTTP upload needed
+    onUpload(file)
   }
 
   return (
